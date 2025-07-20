@@ -1,29 +1,25 @@
 
-import os
 import asyncio
 import aiohttp
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram.utils.markdown import hbold
+import os
 from dotenv import load_dotenv
 
-# Load env variables
 load_dotenv()
-API_TOKEN = os.getenv("API_TOKEN")
-API_KEY = os.getenv("API_KEY")
+API_TOKEN = os.getenv('API_TOKEN')
+API_KEY = os.getenv('API_KEY')
+
 API_URL = 'https://story.blindzone.org/get_stories_by_username'
 BASE_URL = 'https://story.blindzone.org/'
 
-# Bot setup
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
-# Temporary storage for usernames
 usernames = {}
 
-
-# === Story Fetching ===
 async def fetch_stories(username: str, archive: bool = False):
     params = {
         'api_key': API_KEY,
@@ -40,31 +36,24 @@ async def fetch_stories(username: str, archive: bool = False):
         print(f"[API ERROR] {e}")
         return None
 
-
-# === Inline Buttons ===
 def get_mode_buttons():
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="👀 Bugungi hikoyalar", callback_data="mode_today")],
         [InlineKeyboardButton(text="📦 Arxiv hikoyalar", callback_data="mode_archive")]
     ])
 
-
 def get_back_button():
     return InlineKeyboardMarkup(
         inline_keyboard=[[InlineKeyboardButton(text="🔙 Orqaga", callback_data="go_back")]]
     )
 
-
-# === /start handler ===
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
     await message.answer(
-        "👋 Salom! Menga istalgan Telegram foydalanuvchisining @usernameni yuboring, "
+        "👋 Salom! Menga istalgan Instagram foydalanuvchisining @usernameni yuboring, "
         "men sizga hikoyalarini topishga yordam beraman."
     )
 
-
-# === @username yuborilganda ===
 @dp.message(F.text.startswith('@'))
 async def username_handler(message: types.Message):
     username = message.text[1:]
@@ -84,8 +73,6 @@ async def username_handler(message: types.Message):
         reply_markup=get_mode_buttons()
     )
 
-
-# === Callbacklar ===
 @dp.callback_query(F.data.startswith("mode_"))
 async def callback_handler(call: CallbackQuery):
     mode = call.data.split("_")[1]
@@ -120,7 +107,6 @@ async def callback_handler(call: CallbackQuery):
     else:
         await call.message.answer("🚫 Hikoyalar topilmadi.", reply_markup=get_back_button())
 
-
 @dp.callback_query(F.data == "go_back")
 async def go_back_handler(call: CallbackQuery):
     user_id = call.from_user.id
@@ -143,8 +129,6 @@ async def go_back_handler(call: CallbackQuery):
         reply_markup=get_mode_buttons()
     )
 
-
-# === Bot ishga tushirish ===
 async def main():
     print("✅ Bot ishga tushdi!")
     await dp.start_polling(bot)
